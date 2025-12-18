@@ -1,12 +1,12 @@
 # BAN6800_Final_Project
 📦 Databricks-Enabled Procurement SLA Prediction Platform
 
-Author: Taiwo Babalola
+# Author: Taiwo Babalola
 Program: BAN6800 – Business Analytics (Final Project)
 Platform: Databricks (Delta Lake, MLflow, Model Serving)
 Data Layer: Gold (abc.abc_dw_gold)
 
-📌 Overview
+# 📌 Overview
 
 This project delivers an end-to-end, production-ready AI solution that predicts:
 
@@ -16,100 +16,87 @@ PR → PO cycle time in business days (regression)
 
 The solution is built on Databricks Lakehouse architecture, using Gold Delta tables, MLflow Model Registry, and a single real-time serving endpoint consumable by Power BI, APIs, and downstream systems.
 
-🏗️ Architecture
-SAP PR + PO (Silver Layer)
-        ↓
-Gold KPI Transformation (Delta)
-        ↓
-Machine Learning (sklearn)
-        ↓
-MLflow Model Registry
-        ↓
-Databricks Serving Endpoint (ONE)
-        ↓
-Power BI / APIs / Dashboards
+# 🏗️ Architecture
+        SAP PR + PO (Silver Layer)
+                ↓
+        Gold KPI Transformation (Delta)
+                ↓
+        Machine Learning (sklearn)
+                ↓
+        MLflow Model Registry
+                ↓
+        Databricks Serving Endpoint (ONE)
+                ↓
+        Power BI / APIs / Dashboards
 
-🥇 Gold Table Transformation
-Source Tables
+# 🥇 Gold Table Transformation
+        Source Tables:
+#        Bronze Layer Table
+        - abc.abc_dw_silver.abc_dw_sl_pr_req (PR)
+        - abc.abc_dw_silver.abc_dw_sl_pur_ord (PO)
 
-abc.abc_dw_silver.abc_dw_sl_pr_req (PR)
+#        Gold Table
+        abc.abc_dw_gold.abc_dw_gl_pr_po_kpi
 
-abc.abc_dw_silver.abc_dw_sl_pur_ord (PO)
+#        KPIs (Business Days: Sun–Thu)
+         KPI	Description
+                - pr_to_po_ageing	PR approved → PO created
+                - pr_approval_ageing	PR created → PR approved
+                - po_approval_ageing	PO created → PO approved
+#        SLA Flags
+#                Flag	                        Rule
+                sla_breach_flag	                PR→PO > 5 business days
+                pr_cycle_sla_breach_flag	PR approval > 2 days
+                po_cycle_sla_breach_flag	PO approval > 2 days
+#        Record Classification
+        Type
+        - PR_PO_MATCHED
+        - PR_ONLY
+        - PO_ONLY
+        
+#        🤖 Machine Learning Models
+                1️⃣ SLA Breach Classifier
+                        - Algorithm: Random Forest (balanced with SMOTE)
 
-Gold Table
-abc.abc_dw_gold.abc_dw_gl_pr_po_kpi
+#                 Output:
+                        - pred_sla_breach_probability
+                        - pred_sla_breach_label (YES / NO)
+                        - Performance (Typical):
+                                - Accuracy ≈ 0.83
+                                - ROC AUC ≈ 0.93
 
-KPIs (Business Days: Sun–Thu)
-KPI	Description
-pr_to_po_ageing	PR approved → PO created
-pr_approval_ageing	PR created → PR approved
-po_approval_ageing	PO created → PO approved
-SLA Flags
-Flag	Rule
-sla_breach_flag	PR→PO > 5 business days
-pr_cycle_sla_breach_flag	PR approval > 2 days
-po_cycle_sla_breach_flag	PO approval > 2 days
-Record Classification
-Type
-PR_PO_MATCHED
-PR_ONLY
-PO_ONLY
-🤖 Machine Learning Models
-1️⃣ SLA Breach Classifier
+#         2️⃣ PR→PO Cycle Time Regressor
+                Algorithm: Random Forest Regressor
+#                Output:
+                        - pred_pr_to_po_ageing (business days)
 
-Algorithm: Random Forest (balanced with SMOTE)
+#         🧠 Feature Engineering (Leak-Free)
+                - Numeric
+                - pr_orderqty
+                - po_orderquantity
+                - po_netamount
+                - pr_approval_ageing
+                - po_approval_ageing
+                - Categorical
+                - pr_companycode
+                - po_companycode
+                - pr_plant
+                - po_plant
+                - pr_documenttype
+                - po_purchasingdoctypedesc
+                - po_purchasinggroupdesc
+                - po_countrykey
+                - materialgroupdesc
+                - materialtypedesc
+                - record_type
 
-Output:
-
-pred_sla_breach_probability
-
-pred_sla_breach_label (YES / NO)
-
-Performance (Typical):
-
-Accuracy ≈ 0.83
-
-ROC AUC ≈ 0.93
-
-2️⃣ PR→PO Cycle Time Regressor
-
-Algorithm: Random Forest Regressor
-
-Output:
-
-pred_pr_to_po_ageing (business days)
-
-🧠 Feature Engineering (Leak-Free)
-Numeric
-pr_orderqty
-po_orderquantity
-po_netamount
-pr_approval_ageing
-po_approval_ageing
-
-Categorical
-pr_companycode
-po_companycode
-pr_plant
-po_plant
-pr_documenttype
-po_purchasingdoctypedesc
-po_purchasinggroupdesc
-po_countrykey
-materialgroupdesc
-materialtypedesc
-record_type
-
-
-❗ Engineered KPIs are never used as inputs to predict themselves.
-
-🚀 Model Deployment
-MLflow Experiment
-/Shared/Procurement_SLA_Models
-
-Registered Models (Workspace Registry)
-abc.abc_dw_gold.sla_breach_classifier
-abc.abc_dw_gold.pr_to_po_regressor
+#        ❗ Engineered KPIs are never used as inputs to predict themselves.
+                🚀 Model Deployment
+                        - MLflow Experiment
+                        - /Shared/Procurement_SLA_Models
+                        - Registered Models (Workspace Registry)
+                                - abc.abc_dw_gold.sla_breach_classifier
+                                - abc.abc_dw_gold.pr_to_po_regressor
 
 Serving Strategy
 
