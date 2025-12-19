@@ -69,6 +69,24 @@
         - MAE
         - RMSE
         - R²
+
+#  4.3 Repository Structure
+        GOLD SCHEMA (Unity Catalog)
+                │
+                ├── Gold Tables
+                │   ├── abc_dw_gl_pr_po_kpi
+                │   └── abc_dw_gl_pr_po_kpi_predictions
+                │
+                ├── images/
+                │     └── charts_and_visuals/                 # Feature importance, ROC, confusion matrix, etc.
+                ├── Registered Model (UC)
+                │   └── abc.abc_dw_gold.abc_dw_gd_model_Procurement_sla_Combined_Model_BAN6800
+                │
+                └── Model Serving Endpoint (Workspace-level)
+                │   └── ban6800-procurement-sla-combined
+                │       └── references UC model above
+                └── README.md                                # This file
+                
 #  5. Combined PyFunc Model (Single Endpoint)
         Both models are wrapped into one MLflow PyFunc model:
 #        Endpoint Outputs are
