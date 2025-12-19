@@ -138,3 +138,341 @@ This table can be:
                 - Write predictions to Gold.
                 - Deploy/update the endpoint.
 The Endpoint Start Automatically, No manual steps are required once execution starts.
+
+#  10. Result
+#  10.1 Endpoint
+#  10.1.1 Curl URL Endpoint
+                curl \
+                -u token:$DATABRICKS_TOKEN \
+                -X POST \
+                -H "Content-Type: application/json" \
+                -d@data.json \
+                  https://dbc-a08452d4-da56.cloud.databricks.com/serving-endpoints/ban6800-procurement-sla-combined/invocations
+                  
+#  10.1.2  Python Endpoint
+                import os
+                import requests
+                import numpy as np
+                import pandas as pd
+                import json
+
+                def create_tf_serving_json(data):
+                    return {'inputs': {name: data[name].tolist() for name in data.keys()} if isinstance(data, dict) else data.tolist()}
+
+                def score_model(dataset):
+                    url = 'https://dbc-a08452d4-da56.cloud.databricks.com/serving-endpoints/ban6800-procurement-sla-combined/invocations'
+                    headers = {'Authorization': f'Bearer {os.environ.get("DATABRICKS_TOKEN")}', 'Content-Type': 'application/json'}
+                    ds_dict = {'dataframe_split': dataset.to_dict(orient='split')} if isinstance(dataset, pd.DataFrame) else                              create_tf_serving_json(dataset)
+                    data_json = json.dumps(ds_dict, allow_nan=True)
+                    response = requests.request(method='POST', headers=headers, url=url, data=data_json)
+                    if response.status_code != 200:
+                            raise Exception(f'Request failed with status {response.status_code}, {response.text}')
+                    return response.json()
+                    
+# 10.1.3  SQL Endpoint Query
+                SELECT ai_query('ban6800-procurement-sla-combined',
+                    request => {
+                  "dataframe_split": {
+                    "columns": [
+                      "pr_orderqty",
+                      "po_orderquantity",
+                      "po_netamount",
+                      "pr_companycode",
+                      "po_purchasingorgdesc",
+                      "po_companycode",
+                      "po_companycodedesc",
+                      "pr_plant",
+                      "po_plant",
+                      "pr_documenttype",
+                      "po_purchasingdoctypedesc",
+                      "po_purchasinggroupdesc",
+                      "po_countrykey",
+                      "materialgroupdesc",
+                      "materialtypedesc",
+                      "record_type",
+                      "pr_approval_ageing",
+                      "po_approval_ageing",
+                      "po_purchasingdoctype"
+                    ],
+                    "data": [
+                      [
+                        "2",
+                        "2",
+                        "62.72",
+                        "9900",
+                        "ABC logistics Limited Porg",
+                        "9900",
+                        "ABC Logistics Limited",
+                        "9900",
+                        "9900",
+                        "ZNPR",
+                        "Local PO",
+                        "Tobi Emmaunel",
+                        "GH",
+                        "Stationery Expenses",
+                        "Non-Stock Materials",
+                        "PR_PO_MATCHED",
+                        2.0,
+                        8,
+                        "ZLPO"
+                      ],
+                      [
+                        "50",
+                        "50",
+                        "710.5",
+                        "9900",
+                        "ABC logistics Limited Porg",
+                        "9900",
+                        "ABC Logistics Limited",
+                        "9900",
+                        "9900",
+                        "ZNPR",
+                        "Local PO",
+                        "Christian PAT",
+                        "GH",
+                        "Accessories & Consumables",
+                        "Consumables",
+                        "PR_PO_MATCHED",
+                        5.0,
+                        2,
+                        "ZLPO"
+                      ],
+                      [
+                        "20",
+                        "20",
+                        "764.4",
+                        "9900",
+                        "ABC logistics Limited Porg",
+                        "9900",
+                        "ABC Logistics Limited",
+                        "9900",
+                        "9900",
+                        "ZNPR",
+                        "Local PO",
+                        "Christian PAT",
+                        "GH",
+                        "Safety Shoes",
+                        "Consumables",
+                        "PR_PO_MATCHED",
+                        3.0,
+                        2,
+                        "ZLPO"
+                      ],
+                      [
+                        "24",
+                        "24",
+                        "41.16",
+                        "9900",
+                        "ABC logistics Limited Porg",
+                        "9900",
+                        "ABC Logistics Limited",
+                        "9900",
+                        "9900",
+                        "ZNPR",
+                        "Local PO",
+                        "Tobi Emmaunel",
+                        "GH",
+                        "Stationery Expenses",
+                        "Non-Stock Materials",
+                        "PR_PO_MATCHED",
+                        2.0,
+                        8,
+                        "ZLPO"
+                      ],
+                      [
+                        "100",
+                        "25",
+                        "266.78",
+                        "9900",
+                        "ABC logistics Limited Porg",
+                        "9900",
+                        "ABC Logistics Limited",
+                        "9900",
+                        "9900",
+                        "ZNPR",
+                        "Local PO",
+                        "Christian PAT",
+                        "GH",
+                        "Accessories & Consumables",
+                        "Consumables",
+                        "PR_PO_MATCHED",
+                        14.0,
+                        5,
+                        "ZLPO"
+                      ]
+                    ]
+                  }
+                })
+
+#  10.1.1 Request Template 
+          Below is the endpoint invocation format.
+                {
+                  "dataframe_split": {
+                    "columns": [
+                      "pr_orderqty",
+                      "po_orderquantity",
+                      "po_netamount",
+                      "pr_companycode",
+                      "po_purchasingorgdesc",
+                      "po_companycode",
+                      "po_companycodedesc",
+                      "pr_plant",
+                      "po_plant",
+                      "pr_documenttype",
+                      "po_purchasingdoctypedesc",
+                      "po_purchasinggroupdesc",
+                      "po_countrykey",
+                      "materialgroupdesc",
+                      "materialtypedesc",
+                      "record_type",
+                      "pr_approval_ageing",
+                      "po_approval_ageing",
+                      "po_purchasingdoctype"
+                    ],
+                    "data": [
+                      [
+                        "2",
+                        "2",
+                        "62.72",
+                        "9900",
+                        "ABC logistics Limited Porg",
+                        "9900",
+                        "ABC Logistics Limited",
+                        "9900",
+                        "9900",
+                        "ZNPR",
+                        "Local PO",
+                        "Tobi Emmaunel",
+                        "GH",
+                        "Stationery Expenses",
+                        "Non-Stock Materials",
+                        "PR_PO_MATCHED",
+                        2,
+                        8,
+                        "ZLPO"
+                      ],
+                      [
+                        "50",
+                        "50",
+                        "710.5",
+                        "9900",
+                        "ABC logistics Limited Porg",
+                        "9900",
+                        "ABC Logistics Limited",
+                        "9900",
+                        "9900",
+                        "ZNPR",
+                        "Local PO",
+                        "Christian PAT",
+                        "GH",
+                        "Accessories & Consumables",
+                        "Consumables",
+                        "PR_PO_MATCHED",
+                        5,
+                        2,
+                        "ZLPO"
+                      ],
+                      [
+                        "20",
+                        "20",
+                        "764.4",
+                        "9900",
+                        "ABC logistics Limited Porg",
+                        "9900",
+                        "ABC Logistics Limited",
+                        "9900",
+                        "9900",
+                        "ZNPR",
+                        "Local PO",
+                        "Christian PAT",
+                        "GH",
+                        "Safety Shoes",
+                        "Consumables",
+                        "PR_PO_MATCHED",
+                        3,
+                        2,
+                        "ZLPO"
+                      ],
+                      [
+                        "24",
+                        "24",
+                        "41.16",
+                        "9900",
+                        "ABC logistics Limited Porg",
+                        "9900",
+                        "ABC Logistics Limited",
+                        "9900",
+                        "9900",
+                        "ZNPR",
+                        "Local PO",
+                        "Tobi Emmaunel",
+                        "GH",
+                        "Stationery Expenses",
+                        "Non-Stock Materials",
+                        "PR_PO_MATCHED",
+                        2,
+                        8,
+                        "ZLPO"
+                      ],
+                      [
+                        "100",
+                        "25",
+                        "266.78",
+                        "9900",
+                        "ABC logistics Limited Porg",
+                        "9900",
+                        "ABC Logistics Limited",
+                        "9900",
+                        "9900",
+                        "ZNPR",
+                        "Local PO",
+                        "Christian PAT",
+                        "GH",
+                        "Accessories & Consumables",
+                        "Consumables",
+                        "PR_PO_MATCHED",
+                        14,
+                        5,
+                        "ZLPO"
+                      ]
+                    ]
+                  }
+                }
+#  10.1.2 Endpoint Response
+                Below is the endpoint response format
+                        {
+                          "predictions": [
+                            {
+                              "pred_sla_breach_probability": 0.9826907011809315,
+                              "pred_sla_breach_bin": 1,
+                              "pred_sla_breach_label": "YES",
+                              "pred_pr_to_po_ageing": 41
+                            },
+                            {
+                              "pred_sla_breach_probability": 0.32494237041334567,
+                              "pred_sla_breach_bin": 0,
+                              "pred_sla_breach_label": "NO",
+                              "pred_pr_to_po_ageing": 24
+                            },
+                            {
+                              "pred_sla_breach_probability": 0.42864690499593183,
+                              "pred_sla_breach_bin": 0,
+                              "pred_sla_breach_label": "NO",
+                              "pred_pr_to_po_ageing": 20
+                            },
+                            {
+                              "pred_sla_breach_probability": 0.9395665085827828,
+                              "pred_sla_breach_bin": 1,
+                              "pred_sla_breach_label": "YES",
+                              "pred_pr_to_po_ageing": 41
+                            },
+                            {
+                              "pred_sla_breach_probability": 0.19873059422359807,
+                              "pred_sla_breach_bin": 0,
+                              "pred_sla_breach_label": "NO",
+                              "pred_pr_to_po_ageing": 1
+                            }
+                          ]
+                        }
+                
+        
