@@ -141,6 +141,8 @@ The Endpoint Start Automatically, No manual steps are required once execution st
 
 #  10. Result
 #  10.1 Endpoint
+                Below is the endpoint invocation URL
+                https://dbc-a08452d4-da56.cloud.databricks.com/serving-endpoints/ban6800-procurement-sla-combined/invocations
 #  10.1.1 Curl URL Endpoint
                 curl \
                 -u token:$DATABRICKS_TOKEN \
