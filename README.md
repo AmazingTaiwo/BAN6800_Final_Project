@@ -1,198 +1,116 @@
-# BAN6800_Final_Project
-📦 Databricks-Enabled Procurement SLA Prediction Platform
+# 📘 README
+# Project Name – Databricks-Enabled Procurement Analytics
+# BAN6800 - Final Project: End-to-End ML Model Training, Registration, Deployment & Scoring
 
-# Author: Taiwo Babalola
-Program: BAN6800 – Business Analytics (Final Project)
-Platform: Databricks (Delta Lake, MLflow, Model Serving)
-Data Layer: Gold (abc.abc_dw_gold)
+#  1. Overview
+        This project implements a production-ready business analytics solution for procurement performance monitoring using Databricks,           Unity Catalog, MLflow, and Model Serving.
 
-# 📌 Overview
+#       The solution:
+        - Trains two machine learning models on curated Gold-layer procurement data
+        - Combines them into one unified PyFunc model
+        - Registers the model in the Unity Catalog GOLD schema
+        - Deploys a single Databricks Model Serving endpoint
+        - Scores the full Gold dataset
+        - Writes predictions back into the Gold schema for analytics and Power BI consumption
+    This architecture supports predictive SLA monitoring, cycle-time forecasting, and data-driven decision-making for procurement stakeholders.
 
-This project delivers an end-to-end, production-ready AI solution that predicts:
+#  2. Business Use Case
+        Procurement teams face challenges such as:
+                - Late PR→PO processing
+                - SLA breaches impacting supplier performance
+                - Limited forward-looking visibility into delays
+        This solution addresses these issues by:
+                - Predicting SLA breaches before they occur
+                - Forecasting PR→PO cycle times in business days
+                - Providing a single, scalable inference endpoint
+                - Persisting predictions directly in the Gold layer
+#  3. Data Source (Gold Layer)
+        Input Gold Table: abc.abc_dw_gold.abc_dw_gl_pr_po_kpi
+      This table is produced through a controlled Silver → Gold transformation, including:
+        - PR–PO matching logic
+        - Business-day ageing calculations (Sun–Thu)
+        - SLA breach flag derivation
+        - Record type classification (PR_ONLY, PO_ONLY, PR_PO_MATCHED)
+      Only PR_PO_MATCHED records are used for model training and scoring to ensure business relevance.
 
-SLA breach risk (classification)
+#  4. Models Implemented
+#  4.1 SLA Breach Classification Model
+        - Type: Random Forest Classifier
+        - Target: sla_breach_flag (YES / NO)
+        - Techniques:
+                - SMOTE for class imbalance
+                - Leak-free feature selection
+                - Probability-based thresholding (default: 0.55)
+        - Key Metrics Logged
+                - Accuracy
+                - Precision
+                - Recall
+                - F1-Score
+                - ROC-AUC
 
-PR → PO cycle time in business days (regression)
+#  4.2 PR→PO Cycle Time Regression Model
+        - Type: Random Forest Regressor
+        - Target: pr_to_po_ageing (business days)
+        - Purpose: Forecast procurement cycle duration
+#      Key Metrics Logged
+        - MAE
+        - RMSE
+        - R²
+#  5. Combined PyFunc Model (Single Endpoint)
+        Both models are wrapped into one MLflow PyFunc model:
+#        Outputs
+                - pred_sla_breach_probability
+                - pred_sla_breach_bin
+                - pred_sla_breach_label
+                - pred_pr_to_po_ageing
+#        Why one model & one endpoint?
+                - Simplifies deployment
+                - Reduces infrastructure cost
+                - Enables atomic predictions for dashboards and APIs
+                - Aligns with Databricks serving best practices
 
-The solution is built on Databricks Lakehouse architecture, using Gold Delta tables, MLflow Model Registry, and a single real-time serving endpoint consumable by Power BI, APIs, and downstream systems.
+#  6. Model Registry (Unity Catalog – GOLD Schema)
+      The model is registered in the Unity Catalog Model Registry, ensuring governance, lineage, and access control.
+#        Registered Model on Unity Catalog
+          - abc.abc_dw_gold.abc_dw_gd_model_Procurement_sla_Combined_Model_BAN6800
+        The model is saved within the GOLD schema and governed with Databricks Unity Catalog.
 
-# 🏗️ Architecture
-        SAP PR + PO (Silver Layer)
-                ↓
-        Gold KPI Transformation (Delta)
-                ↓
-        Machine Learning (sklearn)
-                ↓
-        MLflow Model Registry
-                ↓
-        Databricks Serving Endpoint (ONE)
-                ↓
-        Power BI / APIs / Dashboards
+#  7. Model Serving Endpoint
+      A single Databricks Model Serving endpoint is created (or updated):
+        - ban6800-procurement-sla-combined
+#       Characteristics
+        - One endpoint
+        - One combined model
+        - 100% traffic routed to the active version
+        - Ready for REST, Power BI, or application integration
 
-# 🥇 Gold Table Transformation
-        Source Tables:
-#        Bronze Layer Table
-        - abc.abc_dw_silver.abc_dw_sl_pr_req (PR)
-        - abc.abc_dw_silver.abc_dw_sl_pur_ord (PO)
+#  8. Prediction Output (Written Back to Gold)
+        Output Table: abc.abc_dw_gold.abc_dw_gl_pr_po_kpi_predictions
+#        Contents
+         - Business identifiers (PR, PO, company, plant, document type)
+         - SLA breach probability & classification
+         - Predicted PR→PO cycle time
+         - Scoring timestamp
+This table can be:
+         - Consumed directly by Power BI
+         - Joined back to procurement fact tables
+         - Used for SLA dashboards and alerts
 
-#        Gold Table
-        abc.abc_dw_gold.abc_dw_gl_pr_po_kpi
+#  9. Key Technologies Used
+         - Databricks
+         - Apache Spark
+         - Unity Catalog
+         - MLflow (UC Registry)
+         - Scikit-learn
+         - Imbalanced-learn (SMOTE)
+         - Databricks Model Serving
 
-#        KPIs (Business Days: Sun–Thu)
-         KPI	Description
-                - pr_to_po_ageing	PR approved → PO created
-                - pr_approval_ageing	PR created → PR approved
-                - po_approval_ageing	PO created → PO approved
-#        SLA Flags
-#                Flag	                        Rule
-                sla_breach_flag	                PR→PO > 5 business days
-                pr_cycle_sla_breach_flag	PR approval > 2 days
-                po_cycle_sla_breach_flag	PO approval > 2 days
-#        Record Classification
-        Type
-        - PR_PO_MATCHED
-        - PR_ONLY
-        - PO_ONLY
-        
-#        🤖 Machine Learning Models
-                1️⃣ SLA Breach Classifier
-                        - Algorithm: Random Forest (balanced with SMOTE)
-
-#                 Output:
-                        - pred_sla_breach_probability
-                        - pred_sla_breach_label (YES / NO)
-                        - Performance (Typical):
-                                - Accuracy ≈ 0.83
-                                - ROC AUC ≈ 0.93
-
-#         2️⃣ PR→PO Cycle Time Regressor
-                Algorithm: Random Forest Regressor
-#                Output:
-                        - pred_pr_to_po_ageing (business days)
-
-#         🧠 Feature Engineering (Leak-Free)
-                - Numeric
-                - pr_orderqty
-                - po_orderquantity
-                - po_netamount
-                - pr_approval_ageing
-                - po_approval_ageing
-                - Categorical
-                - pr_companycode
-                - po_companycode
-                - pr_plant
-                - po_plant
-                - pr_documenttype
-                - po_purchasingdoctypedesc
-                - po_purchasinggroupdesc
-                - po_countrykey
-                - materialgroupdesc
-                - materialtypedesc
-                - record_type
-
-#        ❗ Engineered KPIs are never used as inputs to predict themselves.
-                🚀 Model Deployment
-                        - MLflow Experiment
-                        - /Shared/Procurement_SLA_Models
-                        - Registered Models (Workspace Registry)
-                                - abc.abc_dw_gold.sla_breach_classifier
-                                - abc.abc_dw_gold.pr_to_po_regressor
-
-Serving Strategy
-
-Single Databricks Serving Endpoint
-
-PyFunc model combining:
-
-Classifier
-
-Regressor
-
-Threshold logic
-
-Preprocessing
-
-🔌 Serving Endpoint – Input & Output
-Input (JSON)
-{
-  "dataframe_records": [
-    {
-      "pr_orderqty": 10,
-      "po_orderquantity": 10,
-      "po_netamount": 12500,
-      "pr_companycode": "1000",
-      "po_companycode": "1000",
-      "pr_plant": "P001",
-      "po_plant": "P001",
-      "pr_documenttype": "NB",
-      "po_purchasingdoctypedesc": "Standard PO",
-      "po_purchasinggroupdesc": "LOCAL",
-      "po_countrykey": "QA",
-      "materialgroupdesc": "ELECTRICAL",
-      "materialtypedesc": "ROH",
-      "record_type": "PR_PO_MATCHED",
-      "pr_approval_ageing": 2,
-      "po_approval_ageing": 1
-    }
-  ]
-}
-
-Output
-{
-  "predictions": [
-    {
-      "pred_sla_breach_probability": 0.82,
-      "pred_sla_breach_bin": 1,
-      "pred_sla_breach_label": "YES",
-      "pred_pr_to_po_ageing": 6.4
-    }
-  ]
-}
-
-🧾 Batch Scoring Output (Gold Schema)
-
-Predictions are written back to Delta:
-
-abc.abc_dw_gold.abc_dw_gl_pr_po_kpi_predictions
-
-Columns
-pred_sla_breach_probability
-pred_sla_breach_label
-pred_pr_to_po_ageing
-scoring_timestamp
-
-📊 Power BI Integration
-Recommended Pattern
-Power BI → Databricks SQL Warehouse
-        → Gold Predictions Table
-
-Benefits
-
-No API throttling
-
-Full governance & lineage
-
-High performance
-
-Audit-ready
-
-🔐 Governance & Best Practices
-
-✔ Gold-layer only consumption
-✔ MLflow model versioning
-✔ Reproducible training
-✔ Feature leakage prevention
-✔ Business-day logic aligned with Qatar working calendar
-✔ Enterprise-ready deployment
-
-📈 Business Value
-
-Proactive SLA risk detection
-
-Cycle-time forecasting before delays occur
-
-Reduced escalations & penalties
-
-Improved procurement planning
-
-Executive-ready KPIs for decision-making
+# 10. How to Run
+         - Ensure the Gold table exists and is up to date
+         - Run the script in a Databricks notebook (Python)
+         - The script will automatically:
+                - Train both models.
+                - Register the combined model in UC.
+                - Write predictions to Gold.
+                - Deploy/update the endpoint.
+The Endpoint Start Automatically, No manual steps are required once execution starts.
