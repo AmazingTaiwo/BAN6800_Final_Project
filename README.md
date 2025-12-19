@@ -305,8 +305,8 @@ The Endpoint Start Automatically, No manual steps are required once execution st
                     ]
                   }
                 })
-
-#  10.1.1 Request Template 
+#  10.2 Endpoint Template
+#  10.2.1 Request Template 
           Below is the endpoint invocation format.
                 {
                   "dataframe_split": {
@@ -440,7 +440,7 @@ The Endpoint Start Automatically, No manual steps are required once execution st
                     ]
                   }
                 }
-#  10.1.2 Endpoint Response
+#  10.2.2 Endpoint Response
                 Below is the endpoint response format
                         {
                           "predictions": [
