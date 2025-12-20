@@ -137,8 +137,8 @@ This table can be:
                 - Register the combined model in UC.
                 - Write predictions to Gold.
                 - Deploy/update the endpoint.
-        - Run below pyton script on CMD
-                - BAN6800_Final_Project_Test_script.py
+            - Run below Python script below on CMD
+                    - BAN6800_Final_Project_Test_script.py
 The Endpoint Start Automatically, No manual steps are required once execution starts.
 
 #  10. Result
