@@ -15,7 +15,7 @@ import pandas as pd
 
 DATABRICKS_HOST = "https://dbc-a08452d4-da56.cloud.databricks.com"
 ENDPOINT_NAME = "ban6800-procurement-sla-combined"
-TOKEN = "dapi56cba9554e93a939442c7592d89c70b5"  # <-- your PAT
+TOKEN = "*******************"  # <-- your PAT
 
 url = f"{DATABRICKS_HOST}/serving-endpoints/{ENDPOINT_NAME}/invocations"
 headers = {"Authorization": f"Bearer {TOKEN}", "Content-Type": "application/json"}
@@ -42,3 +42,4 @@ print(resp.status_code)
 print(resp.text)
 resp.raise_for_status()
 print(resp.json())
+
